@@ -48,22 +48,61 @@ namespace LexicalAnalysis
 
 			return str;
 		}
-		static void WriteTokens(String fileName)
+		static void WriteTokens(String fileName, Queue<Symbol> tokens)
 		{
 			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
-
+			StreamWriter sw = new StreamWriter(fs);
+			StringBuilder stringBuilder = new StringBuilder();
+			foreach(var token in tokens)
+			{
+				stringBuilder.Append(token.content+" "+token.classCode);
+				stringBuilder.AppendLine();
+			}
+			sw.Write(stringBuilder);
+			sw.Close();
+			fs.Close();
 		}
-		static void WriteErrors(String fileName)
+		static void WriteErrors(String fileName, Queue<Error> errors )
 		{
-
+			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+			StreamWriter sw = new StreamWriter(fs);
+			StringBuilder stringBuilder = new StringBuilder();
+			foreach (var error in errors)
+			{
+				stringBuilder.Append(error);
+				stringBuilder.AppendLine();
+			}
+			sw.Write(stringBuilder);
+			sw.Close();
+			fs.Close();
 		}
-		static void WriteIDentifier(String fileName)
+		static void WriteIDentifier(String fileName, HashSet<String> iDentifierSet)
 		{
-
+			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+			StreamWriter sw = new StreamWriter(fs);
+			StringBuilder stringBuilder = new StringBuilder();
+			foreach (var iDentifier in iDentifierSet)
+			{
+				stringBuilder.Append(iDentifier);
+				stringBuilder.AppendLine();
+			}
+			sw.Write(stringBuilder);
+			sw.Close();
+			fs.Close();
 		}
-		static void WriteNumber(String fileName)
+		static void WriteNumber(String fileName, HashSet<String> numberSet)
 		{
-
+			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+			StreamWriter sw = new StreamWriter(fs);
+			StringBuilder stringBuilder = new StringBuilder();
+			foreach (var number in numberSet)
+			{
+				stringBuilder.Append(number);
+				stringBuilder.AppendLine();
+			}
+			sw.Write(stringBuilder);
+			sw.Close();
+			fs.Close();
 		}
 		static void Main(string[] args)
 		{
@@ -71,8 +110,8 @@ namespace LexicalAnalysis
 			String code;
 			try
 			{
-				symbols = ReadSymbols(@"../../../src/symbol.txt");
-				code = ReadCode(@"../../../src/code.txt");
+				symbols = ReadSymbols(@"../../src/symbol.txt");
+				code = ReadCode(@"../../src/code.txt");
 			}
 			catch (Exception e)
 			{
@@ -85,10 +124,10 @@ namespace LexicalAnalysis
 			HashSet<String> iDentifierSet;
 			HashSet<String> numberSet;
 			machine.Run(code, out errors, out tokens, out iDentifierSet, out numberSet);
-			WriteTokens(@"../../../out/tokens.txt");
-			WriteErrors(@"../../../out/errors.txt");
-			WriteIDentifier(@"../../../out/iDentifier.txt");
-			WriteNumber(@"../../../out/number.txt");
+			WriteTokens(@"../../out/tokens.txt",tokens);
+			WriteErrors(@"../../out/errors.txt",errors);
+			WriteIDentifier(@"../../out/iDentifier.txt",iDentifierSet);
+			WriteNumber(@"../../out/number.txt",numberSet);
 		}
 	}
 	class LexicalAnalysisMachine
@@ -276,6 +315,7 @@ namespace LexicalAnalysis
 					}
 				}
 			}
+			/*
 			while(tokens.Count!=0)
 				Console.WriteLine(tokens.Dequeue().content);
 			while(errors.Count!=0)
@@ -284,6 +324,7 @@ namespace LexicalAnalysis
 				Console.WriteLine(item);
 			foreach (var item in numberSet)
 				Console.WriteLine(item);
+				*/
 		}
 	}
 	class Error
