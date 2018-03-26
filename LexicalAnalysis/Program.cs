@@ -44,11 +44,24 @@ namespace LexicalAnalysis
 			catch (Exception e) { throw e; }
 
 			str=str.Replace('\t', ' ');
-			str=str.Replace('\r', ' ');
+			str=System.Text.RegularExpressions.Regex.Replace(str, "\r", "");
 
 			return str;
 		}
-		static void WriteFile(dynamic content)
+		static void WriteTokens(String fileName)
+		{
+			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+
+		}
+		static void WriteErrors(String fileName)
+		{
+
+		}
+		static void WriteIDentifier(String fileName)
+		{
+
+		}
+		static void WriteNumber(String fileName)
 		{
 
 		}
@@ -67,7 +80,15 @@ namespace LexicalAnalysis
 				return;
 			}
 			LexicalAnalysisMachine machine = new LexicalAnalysisMachine(symbols);
-			machine.Run(code);
+			Queue<Error> errors;
+			Queue<Symbol> tokens;
+			HashSet<String> iDentifierSet;
+			HashSet<String> numberSet;
+			machine.Run(code, out errors, out tokens, out iDentifierSet, out numberSet);
+			WriteTokens(@"../../../out/tokens.txt");
+			WriteErrors(@"../../../out/errors.txt");
+			WriteIDentifier(@"../../../out/iDentifier.txt");
+			WriteNumber(@"../../../out/number.txt");
 		}
 	}
 	class LexicalAnalysisMachine
@@ -122,6 +143,7 @@ namespace LexicalAnalysis
 		}
 		String[] sourceCodeLines;
 
+		/*
 		private String[] Prase(String str)
 		{
 			var stringBuilder = new StringBuilder();
@@ -140,90 +162,98 @@ namespace LexicalAnalysis
 			}
 			return list.ToArray();
 		}
-		class Error
+		*/
+		
+		int WordAnalyse(String s,ref int index,out String word)
 		{
-			String errorWord;
-			int lineNumber;
-			String errorDescribe;
-			public Error(String errorWord, int lineNumber)
-			{
-				this.errorWord = errorWord;
-				this.lineNumber = lineNumber;
-				this.errorDescribe = String.Format("Detected a invalid word \"{0}\" on line {1}.", errorWord, lineNumber);
-			}
-			override public String ToString()
-			{
-				return errorDescribe;
-			}
-		}
-		int WordAnalyse(String s)
-		{
+			while (s[index] == ' '&&index!=s.Length) index++;
+			int startPosition = index;
 			int state = 0;
-			int i = 0;
+			StringBuilder stringBuilder = new StringBuilder();
+			//Console.WriteLine(s);
+			//Console.WriteLine(index);
 			while (true)
 			{
-				if(i==s.Length||state==5)
+				if (index == s.Length || state >= 5)
 				{
 					break;
 				}
 				switch (state)
 				{
 					case 0:
-						if (isDigit(s[i])) state = 1;
-						else if (isLetter(s[i])) state = 3;
-						else if (isMark(s[i])) state = 4;
+						if (isDigit(s[index])) state = 1;
+						else if (isLetter(s[index])) state = 3;
+						else if (isMark(s[index])) state = 4;
 						else state = 5;
 						break;
 					case 1:
-						if (isDigit(s[i])) state = 1;
-						else if (s[i] == '.') state = 2;
-						else state = 5;
+						if (isDigit(s[index])) state = 1;
+						else if (s[index] == '.') state = 2;
+						else state = 6;
 						break;
 					case 2:
-						if (isDigit(s[i])) state = 2;
-						else state = 5;
+						if (isDigit(s[index])) state = 2;
+						else if (s[index] == '.') state = 5;
+						else state = 6;
 						break;
 					case 3:
-						if (isLetter(s[i])||isDigit(s[i])) state = 3;
-						else state = 5;
+						if (isLetter(s[index])||isDigit(s[index])) state = 3;
+						else state = 8;
 						break;
 					case 4:
-						if (isMark(s[i])) state = 4;
-						else state = 5;
+						if (isMark(s[index])) state = 4;
+						else state = 9;
 						break;
 				}
-				i++;
+				index++;
 			}
-			switch(state)
+			if(state==5)
+			{
+				word = s.Substring(startPosition,index-startPosition);
+				index++;
+				return WordType.Error;
+			}
+			if (state > 5)
+			{
+				word = s.Substring(startPosition, index - startPosition-1);
+				state -= 5;
+			}
+			else
+			{
+				word= s.Substring(startPosition);
+				index++;
+			}
+			switch (state)
 			{
 				case 1:
 				case 2:
 					return WordType.Number;
 				case 3:
-					if (GetSymbolClassCode(s) != 0)
+					if (GetSymbolClassCode(word) != 0)
 						return WordType.KeyWord;
 					else
 						return WordType.IDentifier;
 				case 4:
-					if (GetSymbolClassCode(s) != 0)
+					if (GetSymbolClassCode(word) != 0)
 						return WordType.Signal;
 					break;
 			}
 			return WordType.Error;
 		}
-		public void Run(String content)
+		public void Run(String content,out Queue<Error> errors,out Queue<Symbol> tokens,out HashSet<String> iDentifierSet,out HashSet<String> numberSet)
 		{
-			var errors = new Queue<Error>();
-			var tokens = new Queue<Symbol>();
-			var iDentifierSet = new HashSet<String>();
-			var numberSet = new HashSet<string>();
+			errors = new Queue<Error>();
+			tokens = new Queue<Symbol>();
+			iDentifierSet = new HashSet<string>();
+			numberSet = new HashSet<string>();
 			sourceCodeLines = content.Split('\n');
 			for (int i = 0; i < sourceCodeLines.Length; i++)
 			{
-				String[] words = Prase(sourceCodeLines[i]);
-				foreach (var word in words)
+				int index = 0;
+				while(index<sourceCodeLines[i].Length)
 				{
-					int type = WordAnalyse(word);
+					String word;
+					int type = WordAnalyse(sourceCodeLines[i],ref index,out word);
 					switch (type)
 					{
 						case WordType.Error:
@@ -246,19 +276,30 @@ namespace LexicalAnalysis
 					}
 				}
 			}
-			
-			/*
 			while(tokens.Count!=0)
 				Console.WriteLine(tokens.Dequeue().content);
-	
 			while(errors.Count!=0)
 				Console.WriteLine(errors.Dequeue());
-
 			foreach(var item in iDentifierSet)
 				Console.WriteLine(item);
 			foreach (var item in numberSet)
 				Console.WriteLine(item);
-			*/
+		}
+	}
+	class Error
+	{
+		String errorWord;
+		int lineNumber;
+		String errorDescribe;
+		public Error(String errorWord, int lineNumber)
+		{
+			this.errorWord = errorWord;
+			this.lineNumber = lineNumber;
+			this.errorDescribe = String.Format("Detected a invalid word \"{0}\" on line {1}.", errorWord, lineNumber);
+		}
+		override public String ToString()
+		{
+			return errorDescribe;
 		}
 	}
 	class Symbol

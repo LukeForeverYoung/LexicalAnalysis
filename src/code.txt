@@ -1,4 +1,4 @@
-int main ( )
+int main()
 {
 	123.234.
 int abc444
