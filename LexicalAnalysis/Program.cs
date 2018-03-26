@@ -110,8 +110,8 @@ namespace LexicalAnalysis
 			String code;
 			try
 			{
-				symbols = ReadSymbols(@"../../../src/symbol.txt");
-				code = ReadCode(@"../../../src/code.txt");
+				symbols = ReadSymbols(@"../../src/symbol.txt");
+				code = ReadCode(@"../../src/code.txt");
 			}
 			catch (Exception e)
 			{
@@ -124,10 +124,10 @@ namespace LexicalAnalysis
 			HashSet<String> iDentifierSet;
 			HashSet<String> numberSet;
 			machine.Run(code, out errors, out tokens, out iDentifierSet, out numberSet);
-			WriteTokens(@"../../../out/tokens.txt",tokens);
-			WriteErrors(@"../../../out/errors.txt",errors);
-			WriteIDentifier(@"../../../out/iDentifier.txt",iDentifierSet);
-			WriteNumber(@"../../../out/number.txt",numberSet);
+			WriteTokens(@"../../out/tokens.txt",tokens);
+			WriteErrors(@"../../out/errors.txt",errors);
+			WriteIDentifier(@"../../out/iDentifier.txt",iDentifierSet);
+			WriteNumber(@"../../out/number.txt",numberSet);
 		}
 	}
 	class LexicalAnalysisMachine
@@ -315,6 +315,7 @@ namespace LexicalAnalysis
 					}
 				}
 			}
+			/*
 			while(tokens.Count!=0)
 				Console.WriteLine(tokens.Dequeue().content);
 			while(errors.Count!=0)
@@ -323,6 +324,7 @@ namespace LexicalAnalysis
 				Console.WriteLine(item);
 			foreach (var item in numberSet)
 				Console.WriteLine(item);
+				*/
 		}
 	}
 	class Error
