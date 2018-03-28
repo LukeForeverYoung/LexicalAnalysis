@@ -1,1 +1,0 @@
-Detected a invalid word "123.234." on line 4.

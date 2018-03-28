@@ -50,7 +50,7 @@ namespace LexicalAnalysis
 		}
 		static void WriteTokens(String fileName, Queue<Symbol> tokens)
 		{
-			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+			FileStream fs = new FileStream(fileName, FileMode.Create);
 			StreamWriter sw = new StreamWriter(fs);
 			StringBuilder stringBuilder = new StringBuilder();
 			foreach(var token in tokens)
@@ -64,7 +64,7 @@ namespace LexicalAnalysis
 		}
 		static void WriteErrors(String fileName, Queue<Error> errors )
 		{
-			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+			FileStream fs = new FileStream(fileName, FileMode.Create);
 			StreamWriter sw = new StreamWriter(fs);
 			StringBuilder stringBuilder = new StringBuilder();
 			foreach (var error in errors)
@@ -78,7 +78,7 @@ namespace LexicalAnalysis
 		}
 		static void WriteIDentifier(String fileName, HashSet<String> iDentifierSet)
 		{
-			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+			FileStream fs = new FileStream(fileName, FileMode.Create);
 			StreamWriter sw = new StreamWriter(fs);
 			StringBuilder stringBuilder = new StringBuilder();
 			foreach (var iDentifier in iDentifierSet)
@@ -92,7 +92,7 @@ namespace LexicalAnalysis
 		}
 		static void WriteNumber(String fileName, HashSet<String> numberSet)
 		{
-			FileStream fs = new FileStream(fileName, FileMode.OpenOrCreate);
+			FileStream fs = new FileStream(fileName, FileMode.Create);
 			StreamWriter sw = new StreamWriter(fs);
 			StringBuilder stringBuilder = new StringBuilder();
 			foreach (var number in numberSet)
@@ -110,8 +110,8 @@ namespace LexicalAnalysis
 			String code;
 			try
 			{
-				symbols = ReadSymbols(@"../../src/symbol.txt");
-				code = ReadCode(@"../../src/code.txt");
+				symbols = ReadSymbols(@"src/symbol.txt");
+				code = ReadCode(@"src/code.txt");
 			}
 			catch (Exception e)
 			{
@@ -124,10 +124,10 @@ namespace LexicalAnalysis
 			HashSet<String> iDentifierSet;
 			HashSet<String> numberSet;
 			machine.Run(code, out errors, out tokens, out iDentifierSet, out numberSet);
-			WriteTokens(@"../../out/tokens.txt",tokens);
-			WriteErrors(@"../../out/errors.txt",errors);
-			WriteIDentifier(@"../../out/iDentifier.txt",iDentifierSet);
-			WriteNumber(@"../../out/number.txt",numberSet);
+			WriteTokens(@"out/tokens.txt",tokens);
+			WriteErrors(@"out/errors.txt",errors);
+			WriteIDentifier(@"out/iDentifier.txt",iDentifierSet);
+			WriteNumber(@"out/number.txt",numberSet);
 		}
 	}
 	class LexicalAnalysisMachine
@@ -139,6 +139,7 @@ namespace LexicalAnalysis
 			public const int Number = 2;
 			public const int Signal = 3;
 			public const int IDentifier = 4;
+			public const int Nothing = 5;//处理行末空格的情况
 		}
 		private char[] markList;
 		private Symbol[] symbols;
@@ -202,10 +203,24 @@ namespace LexicalAnalysis
 			return list.ToArray();
 		}
 		*/
-		
+		/// <summary>
+		/// 分析一行字符串
+		/// state:1/2/6 数字 , 3/8 标识符串 , 4/9符号串 , 5 错误
+		/// 大于5的state表示下一位读到了和当前类型不兼容的字符，做截停操作。
+		/// 5代表读到了非法字符，做报错操作。
+		/// </summary>
+		/// <param name="s">字符串引用</param>
+		/// <param name="index">起点坐标</param>
+		/// <param name="word">返回分析结果</param>
+		/// <returns>返回Type，定义在WordType中</returns>
 		int WordAnalyse(String s,ref int index,out String word)
 		{
-			while (s[index] == ' '&&index!=s.Length) index++;
+			while (index != s.Length && s[index] == ' ') index++;
+			if(index==s.Length)
+			{
+				word = "";
+				return WordType.Nothing;
+			}
 			int startPosition = index;
 			int state = 0;
 			StringBuilder stringBuilder = new StringBuilder();
@@ -213,10 +228,7 @@ namespace LexicalAnalysis
 			//Console.WriteLine(index);
 			while (true)
 			{
-				if (index == s.Length || state >= 5)
-				{
-					break;
-				}
+				if (index == s.Length) break;
 				switch (state)
 				{
 					case 0:
@@ -232,7 +244,7 @@ namespace LexicalAnalysis
 						break;
 					case 2:
 						if (isDigit(s[index])) state = 2;
-						else if (s[index] == '.') state = 5;
+						else if (s[index] == '.') state = 6;
 						else state = 6;
 						break;
 					case 3:
@@ -240,21 +252,21 @@ namespace LexicalAnalysis
 						else state = 8;
 						break;
 					case 4:
-						if (isMark(s[index])) state = 4;
+						if (isMark(s[index])&&GetSymbolClassCode(s.Substring(startPosition,index-startPosition+1))!=0) state = 4;
 						else state = 9;
 						break;
 				}
+				if (state >= 5) break;
 				index++;
 			}
 			if(state==5)
 			{
-				word = s.Substring(startPosition,index-startPosition);
+				word = s.Substring(startPosition, index - startPosition + 1);
 				index++;
-				return WordType.Error;
 			}
-			if (state > 5)
+			else if (state > 5)
 			{
-				word = s.Substring(startPosition, index - startPosition-1);
+				word = s.Substring(startPosition, index - startPosition);
 				state -= 5;
 			}
 			else
@@ -311,6 +323,8 @@ namespace LexicalAnalysis
 							break;
 						case WordType.Signal:
 							tokens.Enqueue(new Symbol(word, GetSymbolClassCode(word)));
+							break;
+						case WordType.Nothing:
 							break;
 					}
 				}
