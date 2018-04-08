@@ -143,15 +143,21 @@ namespace LexicalAnalysis
 		}
 		private char[] markList;
 		private Symbol[] symbols;
+		private Symbol CRLF,EOF;
 		public LexicalAnalysisMachine(Symbol[] symbols)
 		{
+			EOF = new Symbol("EOF-1", -1);
 			this.symbols = symbols;
 			var charSet = new HashSet<char>();
 			foreach (var symbol in symbols)
 			{
 				for (int i = 0; i < symbol.content.Length; i++)
+				{
 					if (!isLetter(symbol.content[i]))
 						charSet.Add(symbol.content[i]);
+				}
+				if (symbol.content == "\n")
+					CRLF = symbol;
 			}
 			markList = charSet.ToArray();
 		}
@@ -328,7 +334,9 @@ namespace LexicalAnalysis
 							break;
 					}
 				}
+				tokens.Enqueue(CRLF);
 			}
+			tokens.Enqueue(EOF);
 			/*
 			while(tokens.Count!=0)
 				Console.WriteLine(tokens.Dequeue().content);
