@@ -23,7 +23,7 @@ namespace LexicalAnalysis
 					String str = rs.ReadLine();
 					list.Add(new Symbol(str, code++));
 				}
-				list.Add(new Symbol("\n", code++));
+				list.Add(new Symbol(@"\n", code++));
 				rs.Close();
 				fs.Close();
 			}
@@ -118,6 +118,11 @@ namespace LexicalAnalysis
 				Console.WriteLine(e);
 				return;
 			}
+			foreach(var it in symbols)
+			{
+				Console.WriteLine(it.content + " " + it.classCode);
+			}
+			Console.WriteLine("END");
 			LexicalAnalysisMachine machine = new LexicalAnalysisMachine(symbols);
 			Queue<Error> errors;
 			Queue<Symbol> tokens;
@@ -156,7 +161,7 @@ namespace LexicalAnalysis
 					if (!isLetter(symbol.content[i]))
 						charSet.Add(symbol.content[i]);
 				}
-				if (symbol.content == "\n")
+				if (symbol.content == @"\n")
 					CRLF = symbol;
 			}
 			markList = charSet.ToArray();
