@@ -151,7 +151,7 @@ namespace LexicalAnalysis
 		private Symbol CRLF,EOF;
 		public LexicalAnalysisMachine(Symbol[] symbols)
 		{
-			EOF = new Symbol("EOF-1", -1);
+			EOF = new Symbol("#", 38);
 			this.symbols = symbols;
 			var charSet = new HashSet<char>();
 			foreach (var symbol in symbols)
