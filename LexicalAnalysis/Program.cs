@@ -339,7 +339,6 @@ namespace LexicalAnalysis
 							break;
 					}
 				}
-				tokens.Enqueue(CRLF);
 			}
 			tokens.Enqueue(EOF);
 			/*
