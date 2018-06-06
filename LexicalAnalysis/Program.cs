@@ -24,6 +24,7 @@ namespace LexicalAnalysis
 					list.Add(new Symbol(str, code++));
 				}
 				list.Add(new Symbol(@"\n", code++));
+                list.Add(new Symbol("typedef", 39));
 				rs.Close();
 				fs.Close();
 			}
