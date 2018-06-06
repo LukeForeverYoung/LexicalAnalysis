@@ -57,7 +57,7 @@ namespace LexicalAnalysis
 			StringBuilder stringBuilder = new StringBuilder();
 			foreach(var token in tokens)
 			{
-				stringBuilder.Append(token.content+" "+token.classCode);
+				stringBuilder.Append(token.content+" "+token.classCode+" "+token.line);
 				stringBuilder.AppendLine();
 			}
 			sw.Write(stringBuilder);
@@ -324,18 +324,18 @@ namespace LexicalAnalysis
 							errors.Enqueue(new Error(word, i));
 							break;
 						case WordType.KeyWord:
-							tokens.Enqueue(new Symbol(word, GetSymbolClassCode(word)));
+							tokens.Enqueue(new Symbol(word, GetSymbolClassCode(word),i));
 							break;
 						case WordType.IDentifier:
-							tokens.Enqueue(new Symbol(word, Symbol.IDentifierCode));
+							tokens.Enqueue(new Symbol(word, Symbol.IDentifierCode,i));
 							iDentifierSet.Add(word);
 							break;
 						case WordType.Number:
-							tokens.Enqueue(new Symbol(word, Symbol.NumberCode));
+							tokens.Enqueue(new Symbol(word, Symbol.NumberCode,i));
 							numberSet.Add(word);
 							break;
 						case WordType.Signal:
-							tokens.Enqueue(new Symbol(word, GetSymbolClassCode(word)));
+							tokens.Enqueue(new Symbol(word, GetSymbolClassCode(word),i));
 							break;
 						case WordType.Nothing:
 							break;
@@ -375,13 +375,20 @@ namespace LexicalAnalysis
 	{
 		public const int IDentifierCode = 11;
 		public const int NumberCode = 12;
-		public Symbol(String content, int classCode)
+		public Symbol(String content, int classCode,int line)
 		{
 			this.content = content;
 			this.classCode = classCode;
+            this.line = line;
 		}
-		public String content;
+        public Symbol(String content, int classCode)
+        {
+            this.content = content;
+            this.classCode = classCode;
+        }
+        public String content;
 		public int classCode;
+        public int line;
 	}
 }
 
